@@ -8,6 +8,7 @@ import java.nio.charset.StandardCharsets;
  * Created by mikedice on 12/14/17.
  */
 
+// This is a test class used for reading lines sent from the arduino with cr lf line endings
 public class LineReader{
     private byte[] buffer;
     private int currIndex;
