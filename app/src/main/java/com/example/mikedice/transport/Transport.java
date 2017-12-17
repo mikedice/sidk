@@ -36,6 +36,12 @@ public class Transport {
     private PendingIntent permissionBroadcastReceiver;
     private Context context;
     private LineReader lineReader;
+    private UsbSerialDevice serial;
+    UsbSerialInterface.UsbReadCallback readCallback;
+
+    public Transport(UsbSerialInterface.UsbReadCallback readCallback){
+        this.readCallback = readCallback;
+    }
 
     public List<DeviceDisplayInfo> StartTransport(Context context)
     {
@@ -76,7 +82,7 @@ public class Transport {
     public void DevicePermissionGranted(UsbDevice device){
         UsbDeviceConnection usbConnection = usbManager.openDevice(device);
 
-        UsbSerialDevice serial = UsbSerialDevice.createUsbSerialDevice(device, usbConnection);
+        this.serial = UsbSerialDevice.createUsbSerialDevice(device, usbConnection);
 
         int vendorId = device.getVendorId();
         int deviceClass = device.getDeviceClass();
@@ -89,22 +95,20 @@ public class Transport {
         isSupported = XdcVcpIds.isDeviceSupported(vendorId, productId);
         isSupported = UsbSerialDevice.isCdcDevice(device);
 
-        serial.open();
-        serial.setBaudRate(57600);
-        serial.setDataBits(UsbSerialInterface.DATA_BITS_8);
-        serial.setParity(UsbSerialInterface.PARITY_NONE);
-        serial.setStopBits(1);
+        this.serial.open();
+        this.serial.setBaudRate(57600);
+        this.serial.setDataBits(UsbSerialInterface.DATA_BITS_8);
+        this.serial.setParity(UsbSerialInterface.PARITY_NONE);
+        this.serial.setStopBits(1);
 
-        serial.read(this.mReadCallback);
+        this.serial.read(this.readCallback);
     }
 
-    private UsbSerialInterface.UsbReadCallback mReadCallback = new UsbSerialInterface.UsbReadCallback() {
-        @Override
-        public void onReceivedData(byte[] data)
-        {
-            lineReader.AddBytes(data, data.length);
+    public void sendData(byte[] data){
+        if (this.serial != null){
+            this.serial.write(data);
         }
-    };
+    }
 
     private final BroadcastReceiver mUsbReceiver = new BroadcastReceiver() {
 
